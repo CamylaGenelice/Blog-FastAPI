@@ -124,5 +124,5 @@ Este projeto está sob a licença MIT.
 ---
 
 ## 💡 Autor
-Desenvolvido por Camyla Genelice
+*Desenvolvido por Camyla Genelice 
 Desenvolvido com foco em aprendizado e aplicação de boas práticas de engenharia de software backend.
