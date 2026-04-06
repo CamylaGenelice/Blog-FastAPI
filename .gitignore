@@ -1,10 +1,11 @@
 # Arquivos de cache do Python
+/.pytest_cache
 __pycache__/
 *.pyc
 *.pyo
 
 # Ambiente virtual
-venv/
+/venv
 .env
 
 # Configurações locais
