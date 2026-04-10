@@ -9,7 +9,7 @@ from src.utils.validation import (validar_nome, validar_senha, validar_email)
 from src.model.model import Usuario
 from src.repository.user_repository import UserQueries
 
-class User():
+class UserService():
     def __init__(self, session: AsyncSession):
 
         self.repository = UserQueries(session)
@@ -78,7 +78,7 @@ class User():
             return {
                 'access_token': access_token,
                 'refresh_token': refresh_token,
-                'token_type': 'bearer'
+                'token_type': 'Bearer'
             }
 
         except Exception as e:

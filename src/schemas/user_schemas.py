@@ -8,7 +8,18 @@ class UserSchema(BaseModel): #para a função criar user
 
     class Config:
         from_attributes = True
+class LogoutResponse(BaseModel):
+    message: str
+    code: int
+    class Config:
+        from_attributes = True
 
+class GetUserResponse(BaseModel):
+    objeto: dict
+    code: int
+
+    class Config:
+        from_attributes = True
 
 class UpdatePassword(BaseModel):
     email: str
