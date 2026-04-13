@@ -18,37 +18,32 @@ class CommentsService:
             return comentario_criado
 
         except Exception as e:
-            print(e)
+            print('Erro ao criar comentário: ',e)
             raise e
 
-    async def deletar_comentario(self, id: int):
+    async def deletar_comentario(self, id: int, usuario_id:int):
         try:
-            objeto_busca = await self.buscar_comentario(id)
-            if not objeto_busca:
-                raise Exception('Comentario não encontrado')
-            comentario = await self.repository.deletar_comentario(id)
+            comentario = await self.repository.deletar_comentario(id, usuario_id)
+            if comentario is None:
+                raise Exception('Erro ao deletar comentário: Comentário is None')
             return comentario
-
         except Exception as e:
             print("Erro: ",e)
             raise e
 
-    async def buscar_comentario(self, id: int):
+    async def buscar_comentarios_detalhados(self, post_id: int):
         try:
-            comentario = await self.repository.buscar_comentario(id)
-            if not comentario:
-                raise Exception('Comentario não encontrado')
-            return comentario
+            comentarios = await self.repository.buscar_comentarios(post_id)
+            if not comentarios:
+                raise Exception('Este post ainda não tem comentários.')
+
         except Exception as e:
-           # print("Erro ao buscar comentario ",e)
+            print("Erro ao buscar comentários: ",e)
             raise e
 
-    async def editar_comentario(self, id: int, texto:str):
+    async def editar_comentario(self, id: int, usuario:int ,texto:str):
         try:
-            consulta = await self.repository.buscar_comentario(id)
-            if not consulta:
-                raise Exception('Comentario não encontrado')
-            objeto_comentario = await self.repository.editar_comentario(id, texto)
+            objeto_comentario = await self.repository.editar_comentario(id,usuario, texto)
             return objeto_comentario
         except Exception as e:
             print("Erro ao editar comentario ",e)
