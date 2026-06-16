@@ -1,28 +1,45 @@
 
-from fastapi import APIRouter, HTTPException, Response
-from fastapi.params import Depends
-
-
+from fastapi import APIRouter, HTTPException, Response, File, UploadFile, Form
+from fastapi.params import Depends, Query
+import os
+import uuid
+from typing import Optional
 from src.dependecies.session import pegar_sessao
 from src.dependecies.jwt_dependecies import check_admin_roler
 from src.service.posts_service import PostService
-from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema, GetPostSchema, ResponseUpdatePostSchema
-from src.model.model import Posts
+from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 post_router = APIRouter(prefix="/post", tags=["post"])
+UPLOAD_DIR = 'uploads_images'
 
 @post_router.post('/criar_post', response_model=ResponseCreatePostSchema)
-async def criar_post(dados: PostSchema, session: AsyncSession = Depends(pegar_sessao), _: dict = Depends(check_admin_roler)):
+async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: UploadFile = File(), session: AsyncSession = Depends(pegar_sessao), role: dict = Depends(check_admin_roler)):
     try:
-        objeto_model = Posts(titulo=dados.titulo, conteudo=dados.texto, autor_id=2)
+        extensao = os.path.splitext(imagem.filename)[1].lower()
+
+        if extensao not in ['.jpg', '.jpeg', '.png', '.webp']:
+            raise HTTPException(status_code=400, detail='Formato de imagem inválido')
+
+        nome_unico_imagem = f'{uuid.uuid4()}.{extensao}'
+        caminho_final = os.path.join(UPLOAD_DIR, nome_unico_imagem)
+        try:
+            conteudo_arquivo = await imagem.read()
+            with open(caminho_final, 'wb') as v:
+                v.write(conteudo_arquivo)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f'Erro ao salvar imagem: {e}')
+
+        role_admin = int(role.get('role_id'))
         objeto_service = PostService(session)
-        await objeto_service.criar_post(objeto_model)
+        await objeto_service.criar_post(titulo=titulo, conteudo=conteudo, autor=role_admin, caminho_imagem=imagem)
+
+
         return ResponseCreatePostSchema(
             mensagem=f'Post criado com sucesso!',
-            objeto_titulo=dados.titulo,
-            objeto_texto=dados.texto,
+            objeto_titulo=titulo,
+            objeto_texto=conteudo,
             code=201
         )
 
@@ -31,12 +48,12 @@ async def criar_post(dados: PostSchema, session: AsyncSession = Depends(pegar_se
         print('ERRO: ',e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
-@post_router.post('/editar_post')
-async def atualizar_post(dados:EditarPostSchema , session: AsyncSession = Depends(pegar_sessao), _: str = Depends(check_admin_roler)):
+@post_router.put('/{post_id}/editar_post')
+async def atualizar_post(post_id:int, dados:EditarPostSchema , session: AsyncSession = Depends(pegar_sessao), _: str = Depends(check_admin_roler)):
     try:
 
         objeto_service = PostService(session)
-        await objeto_service.editar_post(dados.id, dados.titulo, dados.conteudo)
+        await objeto_service.editar_post(post_id, dados.titulo, dados.conteudo)
 
         return Response(status_code=201, content='Post atualizado com sucesso!')
 
@@ -51,22 +68,55 @@ async def buscar_posts(session: AsyncSession = Depends(pegar_sessao)):
     try:
         objeto_service = PostService(session)
         consulta = await objeto_service.get_posts()
+        if not consulta:
+            return HTTPException(status_code=404, detail='Não foi possivel encontrar os posts')
         return consulta
 
     except Exception as e:
         print('ERRO: ', e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
-@post_router.delete('/deletar_post')
-async def deletar_post(dados: GetPostSchema,session: AsyncSession = Depends(pegar_sessao), _:str = Depends(check_admin_roler)):
+@post_router.get('/pesquisar_post')
+async def pesquisar_post(titulo_post: str = Query(None, min_length=3, max_length=700) ,session: AsyncSession = Depends(pegar_sessao)):
     try:
         objeto_service = PostService(session)
-        await objeto_service.deletar_post(dados.id)
+        consulta = await objeto_service.buscar_post_nome(titulo_post)
+
+        return consulta
+    except Exception:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail='Erro interno no servidor')
+
+# para selecionar um post e colocar ele como principal
+# tenho varios posts amostra e quero escolher entre eles
+# é para isso que essa rota esta aqui
+@post_router.post('/{post_id}')
+async def buscar_post_id(post_id: int, session: AsyncSession = Depends(pegar_sessao)):
+    try:
+        objeto_service = PostService(session)
+        post_id_convertido = int(post_id)
+        consulta = await objeto_service.get_post(post_id_convertido)
+
+        if not consulta:
+            return HTTPException(status_code=404, detail='Não foi possivel encontrar o post')
+        return consulta
+
+    except Exception as e:
+        print('ERRO: ', e)
+        raise HTTPException(status_code=500, detail='Erro interno no servidor')
+
+
+@post_router.delete('/{post_id}/deletar_post')
+async def deletar_post(post_id:int,session: AsyncSession = Depends(pegar_sessao), _:str = Depends(check_admin_roler)):
+    try:
+        objeto_service = PostService(session)
+        await objeto_service.deletar_post(post_id)
         return Response(status_code=200, content='Post deletado com sucesso!')
 
     except HTTPException as e:
         print('ERRO: ',e)
-        raise HTTPException(status_code=404, detail='Não foi possivel encontrar o post')
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         print('ERRO: ', e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')

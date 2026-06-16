@@ -58,6 +58,16 @@ class PostRepository:
             print(f'Erro: ', {e})
             raise e
 
+    async def buscar_nome_post(self, nome: str):
+        try:
+            obj = select(Posts).where(Posts.titulo == nome)
+            resultado = await self.sessao.execute(obj)
+            return resultado.scalars().all()
+        except SQLAlchemyError as e:
+            await self.sessao.rollback()
+            print(f'Erro: ', {e})
+            raise e
+
     async def buscar_post(self, id:int):
         try:
             objeto_select = select(Posts).where(Posts.id == id)

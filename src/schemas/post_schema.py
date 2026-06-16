@@ -20,6 +20,7 @@ class ResponseCreatePostSchema(BaseModel):
     mensagem: str
     objeto_titulo: str
     objeto_texto: str
+    objeto_imagem: Optional[str] = None
     code: int
 
     class Config:

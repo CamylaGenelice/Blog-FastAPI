@@ -17,6 +17,7 @@ class Usuario(Base):
     codigo_expiracao = Column(DateTime, nullable=True)
     tentativas_codigo = Column(Integer, default=0)
     token_refresh = Column(Text, nullable=True, unique=True)
+    comentarios = relationship('Comentarios', back_populates="autor")
 
     def __init__(self, nome,email, senha, role_id=1):
         self.nome = nome
@@ -37,13 +38,15 @@ class Posts(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     titulo = Column(String, nullable=False)
     conteudo = Column(String, nullable=False)
+    imagem_nome_arquivo = Column(String, nullable=True)
     autor_id = Column(Integer, ForeignKey("usuario.id"))
     aut = relationship("Usuario", foreign_keys=[autor_id])
 
-    def __init__(self, titulo, conteudo, autor_id):
+    def __init__(self, titulo, conteudo, autor_id, caminho=None):
         self.titulo = titulo
         self.conteudo = conteudo
         self.autor_id = autor_id
+        self.imagem_nome_arquivo = caminho
 
 class Comentarios(Base):
     __tablename__ = "comentario"
@@ -52,7 +55,7 @@ class Comentarios(Base):
     autor_id = Column(Integer, ForeignKey("usuario.id"))
     post_id = Column(Integer, ForeignKey("post.id"))
 
-    autor = relationship("Usuario", foreign_keys=[autor_id])
+    autor = relationship("Usuario", foreign_keys=[autor_id], back_populates="comentarios")
     post = relationship("Posts", foreign_keys=[post_id])
 
     def __init__(self, texto, autor_id, post_id):
