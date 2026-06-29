@@ -15,40 +15,47 @@ class CommentsService:
         try:
 
             comentario_criado =  await self.repository.criar_comentario(dados)
+            if not comentario_criado:
+                raise Exception('Post não existe')
             return comentario_criado
 
         except Exception as e:
-            print(e)
+            print('Erro ao criar comentário: ',e)
             raise e
 
-    async def deletar_comentario(self, id: int):
+    async def deletar_comentario(self, comentario_id: int, usuario_id:int, post_id:int):
         try:
-            objeto_busca = await self.buscar_comentario(id)
-            if not objeto_busca:
-                raise Exception('Comentario não encontrado')
-            comentario = await self.repository.deletar_comentario(id)
-            return comentario
+            consulta = await self.repository.buscar_comentario_por_id(comentario_id)
+            if not consulta:
+                raise HTTPException(status_code=404, detail='Comentário não encontrado')
+
+            is_admin = (usuario_id == 10)
+
+            if not (is_admin or usuario_id):
+                raise HTTPException(status_code=403, detail='Sem permissão para deletar')
+
+            await self.repository.deletar_comentario(comentario_id, post_id)
+
+            return {'msg': 'Comentário deletado com sucesso'}
 
         except Exception as e:
             print("Erro: ",e)
             raise e
 
-    async def buscar_comentario(self, id: int):
+    async def buscar_comentarios_detalhados(self, post_id: int):
         try:
-            comentario = await self.repository.buscar_comentario(id)
-            if not comentario:
-                raise Exception('Comentario não encontrado')
-            return comentario
+            comentarios = await self.repository.buscar_comentarios(post_id)
+            if not comentarios:
+                raise HTTPException(status_code=404, detail='Esse post ainda não tem comentários')
+            return comentarios
+
         except Exception as e:
-           # print("Erro ao buscar comentario ",e)
+            print("Erro ao buscar comentários: ",e)
             raise e
 
-    async def editar_comentario(self, id: int, texto:str):
+    async def editar_comentario(self, id: int, usuario:int ,texto:str):
         try:
-            consulta = await self.repository.buscar_comentario(id)
-            if not consulta:
-                raise Exception('Comentario não encontrado')
-            objeto_comentario = await self.repository.editar_comentario(id, texto)
+            objeto_comentario = await self.repository.editar_comentario(id,usuario, texto)
             return objeto_comentario
         except Exception as e:
             print("Erro ao editar comentario ",e)

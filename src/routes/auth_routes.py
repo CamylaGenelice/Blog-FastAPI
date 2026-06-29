@@ -42,21 +42,25 @@ async def login( form_data: OAuth2PasswordRequestForm = Depends(), session: Asyn
        objeto_service = UserService(session)
        tokens = await objeto_service.login_usuario(form_data.username, form_data.password)
 
+       print(tokens)
        response = JSONResponse(status_code=200, content='Login realizado com sucesso')
 
        response.set_cookie(
            key='access_token',
            value=tokens['access_token'],
            httponly=True,
-           max_age=1800,
-           samesite='lax')
+           secure=False,
+           samesite='lax',
+           path="/",
+           max_age=1800
+           )
 
        return response
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@auth_router.post('logout',response_model=LogoutResponse)
+@auth_router.post('/logout',response_model=LogoutResponse)
 async def logout(response: Response,_: AsyncSession = Depends(pegar_sessao)):
     response.delete_cookie(key='access_token')
     return LogoutResponse(

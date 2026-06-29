@@ -3,38 +3,29 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title='Meu Blog API')
 load_dotenv()
-def get_cors_origins():
 
-    if os.getenv("ENVIRONMENT") == "development" or not os.getenv("RENDER"):
-        return [
-            "http://localhost:3000",
-            "http://localhost:5500",
-            "http://127.0.0.1:5500",
-            "http://localhost:8000",
-        ]
-    frontend_url = os.getenv("FRONTEND_URL")
+UPLOAD_DIR = 'uploads_images'
 
-    origins = []
+if not os.path.exists(UPLOAD_DIR):
+    os.mkdir(UPLOAD_DIR)
 
-    if frontend_url:
-        origins.append(frontend_url)
+# Diz ao FastAPI para servir os arquivos da pasta uploads_images
+# na URL http://127.0.0.1:8000/static/.
+app.mount("/static",StaticFiles(directory=UPLOAD_DIR), name="static")
 
-    render_url = os.getenv("RENDER_EXTERNAL_URL")
-    if render_url:
-        origins.append(render_url)
+origins = [
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+ ]
 
-    if not origins:
-        render_hostname = os.getenv("RENDER_HOSTNAME")
-        if render_hostname:
-            origins.append(f"https://{render_hostname}")
 
-    return origins if origins else ["https://meudominio.onrender.com"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_cors_origins(),
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],

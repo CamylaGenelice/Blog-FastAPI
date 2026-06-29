@@ -9,9 +9,8 @@ class PostSchema(BaseModel):
         from_attributes = True
 
 class EditarPostSchema(BaseModel):
-    id: int
     titulo: Optional[str] = None
-    conteudo: Optional[str] = None
+    texto: Optional[str] = None
 
     class Config:
         from_attributes= True
@@ -20,13 +19,14 @@ class ResponseCreatePostSchema(BaseModel):
     mensagem: str
     objeto_titulo: str
     objeto_texto: str
+    objeto_imagem: Optional[str] = None
     code: int
 
     class Config:
         from_attributes= True
 
-class ResponseUpdatePostSchema(ResponseCreatePostSchema):
-
+class ResponseUpdatePostSchema():
+    mensagem: str
     class Config:
         from_attributes= True
 

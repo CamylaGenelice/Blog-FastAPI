@@ -25,7 +25,7 @@ async def current_user(access_token: Annotated[str | None, Cookie()] = None, ses
             if not access_token:
                 raise HTTPException(status_code=401, detail="Token não encontrado nos cookies")
 
-            token = access_token.replace('Bearer', '')
+            token = access_token.replace('Bearer', '').strip()
 
             security = JwtSecurity(session)
 
