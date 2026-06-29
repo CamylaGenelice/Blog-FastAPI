@@ -53,7 +53,7 @@ class Comentarios(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     texto = Column(String, nullable=False)
     autor_id = Column(Integer, ForeignKey("usuario.id"))
-    post_id = Column(Integer, ForeignKey("post.id"))
+    post_id = Column(Integer, ForeignKey("post.id",ondelete="CASCADE"))
 
     autor = relationship("Usuario", foreign_keys=[autor_id], back_populates="comentarios")
     post = relationship("Posts", foreign_keys=[post_id])

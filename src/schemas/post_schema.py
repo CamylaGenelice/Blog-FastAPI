@@ -9,9 +9,8 @@ class PostSchema(BaseModel):
         from_attributes = True
 
 class EditarPostSchema(BaseModel):
-    id: int
     titulo: Optional[str] = None
-    conteudo: Optional[str] = None
+    texto: Optional[str] = None
 
     class Config:
         from_attributes= True
@@ -26,8 +25,8 @@ class ResponseCreatePostSchema(BaseModel):
     class Config:
         from_attributes= True
 
-class ResponseUpdatePostSchema(ResponseCreatePostSchema):
-
+class ResponseUpdatePostSchema():
+    mensagem: str
     class Config:
         from_attributes= True
 

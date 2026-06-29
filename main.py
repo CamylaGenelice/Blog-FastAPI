@@ -12,6 +12,7 @@ UPLOAD_DIR = 'uploads_images'
 
 if not os.path.exists(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
+
 # Diz ao FastAPI para servir os arquivos da pasta uploads_images
 # na URL http://127.0.0.1:8000/static/.
 app.mount("/static",StaticFiles(directory=UPLOAD_DIR), name="static")

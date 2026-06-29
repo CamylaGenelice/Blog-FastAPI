@@ -26,13 +26,13 @@ class PostService:
             print(e)
             raise e
 
-    async def editar_post(self,id: int, titulo: str, texto: str):
+    async def editar_post(self,post_id: int, titulo: str, texto: str):
         try:
-            objeto_pesquisa = await self.repository.buscar_post(id)
+            objeto_pesquisa = await self.repository.buscar_post(post_id)
             if not objeto_pesquisa:
                 raise HTTPException(status_code=404, detail='Post não encontrado')
 
-            objeto_post = await self.repository.alterar_post(id, titulo, texto)
+            objeto_post = await self.repository.alterar_post(post_id, titulo, texto)
             return objeto_post
 
         except Exception as e:
@@ -49,7 +49,7 @@ class PostService:
         except Exception as e:
             raise e
 
-    async def get_post(self, id: int):
+    async def buscar_post_id(self, id: int):
         try:
             consulta = await self.repository.buscar_post(id)
             if not consulta:
@@ -60,7 +60,7 @@ class PostService:
             print(e)
             raise e
 
-    async def get_posts(self) :
+    async def buscar_posts(self) :
         try:
             objeto = await self.repository.buscar_posts()
             if not objeto:

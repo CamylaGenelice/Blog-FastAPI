@@ -70,7 +70,7 @@ async def buscar_comentarios(post_id: int, session: AsyncSession = Depends(pegar
         objeto_service = CommentsService(session)
         objeto_post = PostService(session)
 
-        consulta = await objeto_post.get_post(post_id_convertido)
+        consulta = await objeto_post.buscar_post_id(post_id_convertido)
 
         if not consulta:
             raise HTTPException(status_code=404, detail='Post não encontrado')

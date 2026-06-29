@@ -7,7 +7,7 @@ from typing import Optional
 from src.dependecies.session import pegar_sessao
 from src.dependecies.jwt_dependecies import check_admin_roler
 from src.service.posts_service import PostService
-from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema
+from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema, ResponseUpdatePostSchema
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -15,14 +15,17 @@ post_router = APIRouter(prefix="/post", tags=["post"])
 UPLOAD_DIR = 'uploads_images'
 
 @post_router.post('/criar_post', response_model=ResponseCreatePostSchema)
-async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: UploadFile = File(), session: AsyncSession = Depends(pegar_sessao), role: dict = Depends(check_admin_roler)):
+async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: Optional[UploadFile] = File(None), session: AsyncSession = Depends(pegar_sessao), role: dict = Depends(check_admin_roler)):
     try:
-        extensao = os.path.splitext(imagem.filename)[1].lower()
+        nome_unico_imagem = None
 
-        if extensao not in ['.jpg', '.jpeg', '.png', '.webp']:
-            raise HTTPException(status_code=400, detail='Formato de imagem inválido')
+        if imagem and imagem.filename:
+            extensao = os.path.splitext(imagem.filename)[1].lower()
 
-        nome_unico_imagem = f'{uuid.uuid4()}.{extensao}'
+            if extensao not in ['.jpg', '.jpeg', '.png', '.webp']:
+                raise HTTPException(status_code=400, detail='Formato de imagem inválido')
+
+        nome_unico_imagem = f'{uuid.uuid4()}{extensao}'
         caminho_final = os.path.join(UPLOAD_DIR, nome_unico_imagem)
         try:
             conteudo_arquivo = await imagem.read()
@@ -33,41 +36,47 @@ async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: Up
 
         role_admin = int(role.get('role_id'))
         objeto_service = PostService(session)
-        await objeto_service.criar_post(titulo=titulo, conteudo=conteudo, autor=role_admin, caminho_imagem=imagem)
+        await objeto_service.criar_post(titulo=titulo, conteudo=conteudo, autor=role_admin, caminho_imagem=nome_unico_imagem)
 
 
         return ResponseCreatePostSchema(
-            mensagem=f'Post criado com sucesso!',
+            mensagem='Post criado com sucesso!',
             objeto_titulo=titulo,
             objeto_texto=conteudo,
+            objeto_imagem=nome_unico_imagem,
             code=201
         )
 
-
+    except HTTPException as http_err:
+        raise http_err
     except Exception as e:
         print('ERRO: ',e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
 @post_router.put('/{post_id}/editar_post')
-async def atualizar_post(post_id:int, dados:EditarPostSchema , session: AsyncSession = Depends(pegar_sessao), _: str = Depends(check_admin_roler)):
+async def atualizar_post(post_id:int, dados: EditarPostSchema, session: AsyncSession = Depends(pegar_sessao), _: str = Depends(check_admin_roler)):
     try:
 
         objeto_service = PostService(session)
-        await objeto_service.editar_post(post_id, dados.titulo, dados.conteudo)
+        await objeto_service.editar_post(post_id,dados.titulo,dados.texto)
 
-        return Response(status_code=201, content='Post atualizado com sucesso!')
+        return {
+            'mensagem': 'Post atualizado com sucesso!',
+            'code': 201
+        }
 
-
+    except HTTPException as http_err:
+        raise http_err
     except Exception as e:
         print('ERRO na rota: ', e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
-
+# buscar todos os posts
 @post_router.get('/posts')
 async def buscar_posts(session: AsyncSession = Depends(pegar_sessao)):
     try:
         objeto_service = PostService(session)
-        consulta = await objeto_service.get_posts()
+        consulta = await objeto_service.buscar_posts()
         if not consulta:
             return HTTPException(status_code=404, detail='Não foi possivel encontrar os posts')
         return consulta
@@ -76,6 +85,7 @@ async def buscar_posts(session: AsyncSession = Depends(pegar_sessao)):
         print('ERRO: ', e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
+# pesquisar post pelo titulo
 @post_router.get('/pesquisar_post')
 async def pesquisar_post(titulo_post: str = Query(None, min_length=3, max_length=700) ,session: AsyncSession = Depends(pegar_sessao)):
     try:
@@ -96,23 +106,27 @@ async def buscar_post_id(post_id: int, session: AsyncSession = Depends(pegar_ses
     try:
         objeto_service = PostService(session)
         post_id_convertido = int(post_id)
-        consulta = await objeto_service.get_post(post_id_convertido)
+        consulta = await objeto_service.buscar_post_id(post_id_convertido)
 
         if not consulta:
             return HTTPException(status_code=404, detail='Não foi possivel encontrar o post')
         return consulta
 
+    except HTTPException as e:
+        raise e
     except Exception as e:
         print('ERRO: ', e)
         raise HTTPException(status_code=500, detail='Erro interno no servidor')
 
 
 @post_router.delete('/{post_id}/deletar_post')
-async def deletar_post(post_id:int,session: AsyncSession = Depends(pegar_sessao), _:str = Depends(check_admin_roler)):
+async def deletar_post(post_id:int, session: AsyncSession = Depends(pegar_sessao), _:str = Depends(check_admin_roler)):
     try:
         objeto_service = PostService(session)
         await objeto_service.deletar_post(post_id)
-        return Response(status_code=200, content='Post deletado com sucesso!')
+        return {
+            'mensagem': 'Post deletado com sucesso!'
+        }
 
     except HTTPException as e:
         print('ERRO: ',e)
