@@ -18,6 +18,7 @@ if not os.path.exists(UPLOAD_DIR):
 app.mount("/static",StaticFiles(directory=UPLOAD_DIR), name="static")
 
 origins = [
+        "https://meu-front.vercel.app",
         "http://localhost:5500",
         "http://127.0.0.1:5500",
  ]
