@@ -3,19 +3,20 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+from supabase import create_client, Client
 
 app = FastAPI(title='Meu Blog API')
 load_dotenv()
 
-UPLOAD_DIR = 'uploads_images'
+SUPABASE_URL = os.getenv("ARMAZENAMENTO_IMAGENS_SUPABASE_URL")
+SUPABASE_KEY = os.getenv('ARMAZENAMENTO_IMAGENS_SUPABASE_ANON_KEY')
 
-if not os.path.exists(UPLOAD_DIR):
-    os.mkdir(UPLOAD_DIR)
+if SUPABASE_URL and SUPABASE_KEY:
+    supabase: Client = create_client(SUPABASE_URL,SUPABASE_KEY)
+else:
+    raise RuntimeError('As variáveis de ambiente do Supabase não foram encontradas.')
 
-# Diz ao FastAPI para servir os arquivos da pasta uploads_images
-# na URL http://127.0.0.1:8000/static/.
-app.mount("/static",StaticFiles(directory=UPLOAD_DIR), name="static")
+BUCKET_NAME = 'imagens'
 
 origins = [
         "https://meu-front.vercel.app",
