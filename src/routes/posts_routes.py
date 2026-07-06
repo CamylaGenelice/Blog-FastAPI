@@ -8,7 +8,7 @@ from src.dependecies.jwt_dependecies import check_admin_roler
 from src.service.posts_service import PostService
 from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema, ResponseUpdatePostSchema
 from sqlalchemy.ext.asyncio import AsyncSession
-from upload_images import upload_para_supabase
+from src.routes.upload_images import upload_para_supabase
 
 post_router = APIRouter(prefix="/post", tags=["post"])
 
