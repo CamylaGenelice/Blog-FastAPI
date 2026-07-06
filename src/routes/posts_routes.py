@@ -2,22 +2,21 @@
 from fastapi import APIRouter, HTTPException, Response, File, UploadFile, Form
 from fastapi.params import Depends, Query
 import os
-import uuid
 from typing import Optional
 from src.dependecies.session import pegar_sessao
 from src.dependecies.jwt_dependecies import check_admin_roler
 from src.service.posts_service import PostService
 from src.schemas.post_schema import PostSchema, EditarPostSchema, ResponseCreatePostSchema, ResponseUpdatePostSchema
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from upload_images import upload_para_supabase
 
 post_router = APIRouter(prefix="/post", tags=["post"])
-UPLOAD_DIR = 'uploads_images'
+
 
 @post_router.post('/criar_post', response_model=ResponseCreatePostSchema)
 async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: Optional[UploadFile] = File(None), session: AsyncSession = Depends(pegar_sessao), role: dict = Depends(check_admin_roler)):
     try:
-        nome_unico_imagem = None
+        url_imagem = None
 
         if imagem and imagem.filename:
             extensao = os.path.splitext(imagem.filename)[1].lower()
@@ -25,25 +24,19 @@ async def criar_post(titulo: str = Form(...), conteudo: str = Form(), imagem: Op
             if extensao not in ['.jpg', '.jpeg', '.png', '.webp']:
                 raise HTTPException(status_code=400, detail='Formato de imagem inválido')
 
-        nome_unico_imagem = f'{uuid.uuid4()}{extensao}'
-        caminho_final = os.path.join(UPLOAD_DIR, nome_unico_imagem)
-        try:
-            conteudo_arquivo = await imagem.read()
-            with open(caminho_final, 'wb') as v:
-                v.write(conteudo_arquivo)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f'Erro ao salvar imagem: {e}')
+            url_imagem = await upload_para_supabase(imagem, pasta_destino='capas')
+
 
         role_admin = int(role.get('role_id'))
         objeto_service = PostService(session)
-        await objeto_service.criar_post(titulo=titulo, conteudo=conteudo, autor=role_admin, caminho_imagem=nome_unico_imagem)
+        await objeto_service.criar_post(titulo=titulo, conteudo=conteudo, autor=role_admin, caminho_imagem=url_imagem)
 
 
         return ResponseCreatePostSchema(
             mensagem='Post criado com sucesso!',
             objeto_titulo=titulo,
             objeto_texto=conteudo,
-            objeto_imagem=nome_unico_imagem,
+            objeto_imagem=url_imagem,
             code=201
         )
 
