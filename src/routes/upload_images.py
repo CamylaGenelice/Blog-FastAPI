@@ -3,7 +3,7 @@ from supabase import create_client, Client
 import os
 import uuid
 
-app = APIRouter(prefix='/images', tags=['images'])
+upload_image_router = APIRouter(prefix='/images', tags=['images'])
 
 # Puxa as variáveis que a Vercel gerou automaticamente
 SUPABASE_URL = os.getenv("ARMAZENAMENTO_IMAGENS_SUPABASE_URL")
@@ -45,7 +45,7 @@ async def upload_para_supabase(file: UploadFile, pasta_destino: str = 'blog'):
         raise HTTPException(status_code=400, detail=f'Erro ao subir imagem: {str(e)}')
 
 
-@app.post('/upload')
+@upload_image_router.post('/upload')
 async def upload_image(file: UploadFile = File(...)):
     url = await upload_para_supabase(file, pasta_destino='blog')
     return {'url': url}

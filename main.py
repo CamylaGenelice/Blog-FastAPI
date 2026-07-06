@@ -37,10 +37,12 @@ app.add_middleware(
 from src.routes.auth_routes import auth_router
 from src.routes.posts_routes import post_router
 from src.routes.comments_routes import comments_router
+from src.routes.upload_images import upload_image_router
 
 app.include_router(auth_router)
 app.include_router(post_router)
 app.include_router(comments_router)
+app.include_router(upload_image_router)
 
 @app.get("/")
 def root():
