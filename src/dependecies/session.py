@@ -10,5 +10,5 @@ SessionLocal = sessionmaker(
 
 async def pegar_sessao():
 
-        async with SessionLocal() as sessao:
-            yield sessao
+    async with SessionLocal() as sessao:
+        yield sessao

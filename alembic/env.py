@@ -17,7 +17,12 @@ db_port = os.getenv("PORT")
 db_host = os.getenv("HOST")
 db_name = os.getenv("NAME")
 
-DATABASE_URL =f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+vercel_url = os.getenv("ARMAZENA_DADOS_POSTGRES_URL")
+
+if vercel_url:
+    DATABASE_URL = vercel_url.replace('postgres://', 'postgresql+psycopg2://')
+else:
+    DATABASE_URL =f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
