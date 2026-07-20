@@ -1,3 +1,4 @@
+from sqlalchemy.sql import func
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,9 +39,14 @@ class UserQueries():
             raise e
     async def deletar_usuario(self, id: int):
         try:
+            data_exclusao_e_ativo = update(Usuario).where(Usuario.id == id).values(data_exclusao=func.now(),ativo=False)
+            await self.sessao.execute(data_exclusao_e_ativo)
+            await self.sessao.commit()
+
             consulta = delete(Usuario).where(Usuario.id == id)
             resultado = await self.sessao.execute(consulta)
             await self.sessao.commit()
+
             return resultado.scalars()
         except SQLAlchemyError as e:
             await self.sessao.rollback()
