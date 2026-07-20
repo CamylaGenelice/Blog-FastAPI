@@ -17,6 +17,7 @@ class PostService:
                 raise HTTPException(status_code=404, detail='Campos invalidos')
 
             objeto_model = Posts(titulo=titulo, conteudo=conteudo, autor_id=autor,caminho=caminho_imagem)
+
             if(autor != 2):
                 raise HTTPException(status_code=403,detail='Usuario não tem autorização')
 

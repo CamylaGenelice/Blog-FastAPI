@@ -1,5 +1,7 @@
+from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+import pytz
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 
 from .data import Base
@@ -17,6 +19,8 @@ class Usuario(Base):
     codigo_expiracao = Column(DateTime, nullable=True)
     tentativas_codigo = Column(Integer, default=0)
     token_refresh = Column(Text, nullable=True, unique=True)
+    ativo = Column(Boolean, nullable=True, default=True)
+    data_exclusao = Column(DateTime, nullable=True)
     comentarios = relationship('Comentarios', back_populates="autor")
 
     def __init__(self, nome,email, senha, role_id=1):
@@ -39,6 +43,7 @@ class Posts(Base):
     titulo = Column(String, nullable=False)
     conteudo = Column(String, nullable=False)
     imagem_nome_arquivo = Column(String, nullable=True)
+    data_criacao = Column(DateTime, nullable=True, default=lambda: datetime.now(pytz.timezone('America/Sao_Paulo')))
     autor_id = Column(Integer, ForeignKey("usuario.id"))
     aut = relationship("Usuario", foreign_keys=[autor_id])
 
