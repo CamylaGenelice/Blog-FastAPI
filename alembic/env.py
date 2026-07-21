@@ -11,18 +11,18 @@ from alembic import context
 
 load_dotenv()
 
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
-db_port = os.getenv("DB_PORT")
-db_host = os.getenv("DB_HOST")
-db_name = os.getenv("DB_NAME")
+# db_user = os.getenv("DB_USER")
+#db_password = os.getenv("DB_PASSWORD")
+#db_port = os.getenv("DB_PORT")
+#db_host = os.getenv("DB_HOST")
+#db_name = os.getenv("DB_NAME")
 
 vercel_url = os.getenv("ARMAZENA_DADOS_POSTGRES_URL")
 
-if vercel_url:
-    DATABASE_URL = vercel_url.replace('postgres://', 'postgresql+psycopg2://', 1)
-else:
-    DATABASE_URL =f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+DATABASE_URL = vercel_url.replace('postgres://', 'postgresql+psycopg2://', 1)
+# else:
+    #DATABASE_URL =f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
