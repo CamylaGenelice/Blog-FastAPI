@@ -11,11 +11,17 @@ from alembic import context
 
 load_dotenv()
 
-vercel_url = os.getenv("ARMAZENA_DADOS_POSTGRES_URL")
+vercel_url = os.getenv('ARMAZENA_DADOS_POSTGRES_URL')
 
+if not vercel_url:
+    raise ValueError('DATABASE_URL variavel não encontrada')
 
-DATABASE_URL = vercel_url.replace('postgres://', 'postgresql+psycopg2://', 1)
-
+if vercel_url.startswith("postgres://"):
+    DATABASE_URL = vercel_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif vercel_url.startswith("postgresql://"):
+    DATABASE_URL = vercel_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+else:
+    DATABASE_URL = vercel_url
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
